@@ -1,44 +1,45 @@
-import { request } from "@octokit/request"
 import ora from "ora";
-import { Buffer } from 'buffer';
-import { writeFile } from 'fs';
+import Git from "./Git.js";
 export default class Charisma {
     constructor(options) {
         this.options = options
+        this.git = null
     }
+   help(){
+       return this.git?this.git:(this.git = new Git())
+   } 
     run() {
         let url, defOpts = {
-            owner: "Doniyang",
-            repo: "Javascript",
-            branch: "master"
+            cwd:'D:/nodeSpace/dev'
         };
         let template = this.options.template;
+        let dir = this.options.project
         if (template) {
             this.fetch(url, defOpts)
         } else {
-            url = 'GET https://github.com/{owner}/{repo}.git';
-            this.fetch(url, defOpts)
+            url = 'https://github.com/Doniyang/mux-ui.git';
+            this.fetch(url, dir, defOpts)
         }
     }
 
-    fetch(url, opts) {
+    fetch(url, dest,opts) {
         const spinner = ora('generate project start');
         spinner.start('download ...');
-        request(url, opts).then(res => {
-            spinner.succeed('download template success');
-            spinner.start('extra file ...');
-            const data = new Uint8Array(Buffer.from(res));
-            writeFile('项目描述', data, (err) => {
-              if (err) {
-                spinner.fail('fail '+err.toString())
-              }else{
-                spinner.succeed('success');
-              }
-              
-            });
-        }).catch(err => {
-            spinner.fail('download template '+err.toString())
+        console.log(dest)
+        this.help().clone(url,dest,opts).then(data=>{
+            spinner.succeed("success")
+        }).catch(err=>{
+            spinner.fail("download fail")
         })
+
+        // download(url, dest+"/", opts, err=>{
+        //    if(err){
+        //        spinner.fail("download fail")
+        //        this.fetch(url,dest,opts)
+        //    }else{
+        //        spinner.succeed("success")
+        //    }
+        // })
     }
 };
 
